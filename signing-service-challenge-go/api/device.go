@@ -46,8 +46,11 @@ func (s *Server) CreateSignatureDevice(response http.ResponseWriter, request *ht
 		WriteErrorResponse(response, http.StatusBadRequest, *errors)
 		return
 	}
-
-	createSignatureDeviceResponse := CreateSignatureDeviceResponse{}
+	deviceId, label := s.storage.CreateSignatureDevice(body.Id, body.Algorithm, body.Label)
+	createSignatureDeviceResponse := CreateSignatureDeviceResponse{
+		DeviceId: deviceId,
+		Label:    label,
+	}
 
 	WriteAPIResponse(response, http.StatusOK, createSignatureDeviceResponse)
 }

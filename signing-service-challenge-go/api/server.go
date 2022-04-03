@@ -39,8 +39,8 @@ func (s *Server) Run() error {
 	mux := http.NewServeMux()
 
 	mux.Handle("/api/v0/health", http.HandlerFunc(s.Health))
-
-	// TODO: register further HandlerFuncs here ...
+	mux.Handle("api/v0/create-signature-device", http.HandlerFunc(s.CreateSignatureDevice))
+	mux.Handle("api/v0/sign-transaction", http.HandlerFunc(s.SignTransaction))
 
 	return http.ListenAndServe(s.listenAddress, mux)
 }
