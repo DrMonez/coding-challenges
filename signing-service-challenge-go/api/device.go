@@ -27,14 +27,14 @@ type SignTransactionRequest struct {
 	Data     string `json:"data"`
 }
 
-func PostMethodTemplate[T any](request *http.Request, body *T) (isValid bool, errors *[]string) {
+func PostMethodTemplate[T any](request *http.Request, body *T) (isValid bool, errors []string) {
 	if request.Method != http.MethodPost {
-		return false, &[]string{http.StatusText(http.StatusMethodNotAllowed)}
+		return false, []string{http.StatusText(http.StatusMethodNotAllowed)}
 	}
 	decoder := json.NewDecoder(request.Body)
 	err := decoder.Decode(&body)
 	if err != nil {
-		return false, &[]string{http.StatusText(http.StatusBadRequest)}
+		return false, []string{http.StatusText(http.StatusBadRequest)}
 	}
 	return true, nil
 }
@@ -43,10 +43,10 @@ func (s *Server) CreateSignatureDevice(response http.ResponseWriter, request *ht
 	var body CreateSignatureDeviceRequest
 	isValidRequest, errors := PostMethodTemplate(request, &body)
 	if isValidRequest {
-		WriteErrorResponse(response, http.StatusBadRequest, *errors)
+		WriteErrorResponse(response, http.StatusBadRequest, errors)
 		return
 	}
-	deviceId, label := s.storage.CreateSignatureDevice(body.Id, body.Algorithm, body.Label)
+	deviceId, label := (*s.storage).CreateSignatureDevice(body.Id, body.Algorithm, body.Label)
 	createSignatureDeviceResponse := CreateSignatureDeviceResponse{
 		DeviceId: deviceId,
 		Label:    label,
@@ -59,7 +59,7 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 	var body SignTransactionRequest
 	isValidRequest, errors := PostMethodTemplate(request, &body)
 	if isValidRequest {
-		WriteErrorResponse(response, http.StatusBadRequest, *errors)
+		WriteErrorResponse(response, http.StatusBadRequest, errors)
 		return
 	}
 
