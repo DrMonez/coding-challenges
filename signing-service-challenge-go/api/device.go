@@ -42,7 +42,7 @@ func PostMethodTemplate[T any](request *http.Request, body *T) (isValid bool, er
 func (s *Server) CreateSignatureDevice(response http.ResponseWriter, request *http.Request) {
 	var body CreateSignatureDeviceRequest
 	isValidRequest, errors := PostMethodTemplate(request, &body)
-	if isValidRequest {
+	if !isValidRequest {
 		WriteErrorResponse(response, http.StatusBadRequest, errors)
 		return
 	}

@@ -1,9 +1,10 @@
 package persistence
 
 import (
-	"errors"
+	"fmt"
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/domain"
-	uuid2 "github.com/google/uuid"
+	"github.com/google/uuid"
+	"sync"
 )
 
 const DEFAULT_LABEL = "Signing transaction..."
@@ -18,48 +19,55 @@ type Storage interface {
 }
 
 type LocalStorage struct {
-	UserDevices map[string]*map[string]bool
-	Devices     map[string]*domain.Device
+	UserDevicesMutex sync.Mutex
+	UserDevices      map[string]map[string]struct{}
+	DevicesMutex     sync.Mutex
+	Devices          map[string]*domain.Device
 }
 
-func (s LocalStorage) CreateSignatureDevice(
+func (s *LocalStorage) CreateSignatureDevice(
 	userId string, algorithm domain.CryptoAlgorithmType, label string,
 ) (DeviceId string, Label string) {
-
+	s.UserDevicesMutex.Lock()
 	userDevices := s.UserDevices[userId]
 	if userDevices == nil {
-		userDevices = &map[string]bool{}
+		userDevices = make(map[string]struct{})
 	}
-	deviceId := uuid2.New().String()
-	(*userDevices)[deviceId] = true
 	s.UserDevices[userId] = userDevices
+	s.UserDevicesMutex.Unlock()
 
-	var actualLabel string
+	deviceId := uuid.New().String()
+
+	actualLabel := DEFAULT_LABEL
 	if label != "" {
 		actualLabel = label
-	} else {
-		actualLabel = DEFAULT_LABEL
 	}
 	device := domain.Device{
-		Id:               deviceId,
-		Algorithm:        algorithm,
-		Label:            actualLabel,
-		SignatureCounter: 0,
+		Id:         deviceId,
+		Algorithm:  algorithm,
+		Label:      actualLabel,
+		Signatures: []domain.Signature{},
 	}
+	s.DevicesMutex.Lock()
 	s.Devices[deviceId] = &device
+	s.DevicesMutex.Unlock()
 
 	return deviceId, actualLabel
 }
 
-func (s LocalStorage) GetDevice(deviceId string) *domain.Device {
-	// In general, we should check that required device is active. In our case it's not necessary
-	return s.Devices[deviceId]
+func (s *LocalStorage) GetDevice(deviceId string) *domain.Device {
+	s.DevicesMutex.Lock()
+	device := s.Devices[deviceId]
+	s.DevicesMutex.Unlock()
+	return device
 }
 
-func (s LocalStorage) UpdateDevice(device *domain.Device) error {
+func (s *LocalStorage) UpdateDevice(device *domain.Device) error {
+	s.DevicesMutex.Lock()
 	if s.Devices[device.Id] == nil {
-		return errors.New("Device with such Id is not exist")
+		return fmt.Errorf("Device with Id=\"%s\" does not exist", device.Id)
 	}
 	s.Devices[device.Id] = device
+	s.DevicesMutex.Unlock()
 	return nil
 }
