@@ -82,18 +82,12 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 		lastSignedData = lastSignature.SignedData
 	}
 
-	var signer crypto.Signer
-	switch device.Algorithm {
-	case domain.RSA:
-		s.rsaSigner.Device = device
-		signer = s.rsaSigner
-	case domain.ECC:
-		s.eccSigner.Device = device
-		signer = s.eccSigner
-	default:
+	signer, err := s.GetSigner(device)
+	if err != nil {
 		WriteInternalError(response)
+		return
 	}
-	
+
 	signedData, err := signer.Sign([]byte(body.Data))
 	if err != nil {
 		WriteInternalError(response)
@@ -107,4 +101,25 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 	}
 
 	WriteAPIResponse(response, http.StatusOK, signTransactionResponse)
+}
+
+func (s *Server) GetSigner(device *domain.Device) (crypto.Signer, error) {
+	switch device.Algorithm {
+	case domain.RSA:
+		return &crypto.RSASigner{
+			Storage:      s.storage,
+			RsaMarshaler: crypto.NewRSAMarshaler(),
+			RsaGenerator: crypto.RSAGenerator{},
+			Device:       device,
+		}, nil
+	case domain.ECC:
+		return crypto.ECCSigner{
+			Storage:      s.storage,
+			EccMarshaler: crypto.NewECCMarshaler(),
+			EccGenerator: crypto.ECCGenerator{},
+			Device:       device,
+		}, nil
+	default:
+		return nil, fmt.Errorf("algorithm is not implemented")
+	}
 }
