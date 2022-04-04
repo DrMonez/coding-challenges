@@ -1,3 +1,8 @@
 package domain
 
-// TODO: signature device domain model ...
+type Device struct {
+	Id               string
+	Algorithm        CryptoAlgorithmType
+	Label            string
+	SignatureCounter int
+}
