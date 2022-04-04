@@ -48,7 +48,7 @@ func (s *Server) CreateSignatureDevice(response http.ResponseWriter, request *ht
 		WriteErrorResponse(response, http.StatusBadRequest, errors)
 		return
 	}
-	deviceId, label := (*s.storage).CreateSignatureDevice(body.Id, body.Algorithm, body.Label)
+	deviceId, label := s.storage.CreateSignatureDevice(body.Id, body.Algorithm, body.Label)
 	createSignatureDeviceResponse := CreateSignatureDeviceResponse{
 		DeviceId: deviceId,
 		Label:    label,
@@ -65,13 +65,15 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 		return
 	}
 
-	lastSignature, err := (*s.storage).GetLastDeviceSignature(body.DeviceId)
+	lastSignature, err := s.storage.GetLastDeviceSignature(body.DeviceId)
 	if err != nil {
 		WriteInternalError(response)
+		return
 	}
-	device := (*s.storage).GetDevice(body.DeviceId)
+	device := s.storage.GetDevice(body.DeviceId)
 	if device == nil {
 		WriteInternalError(response)
+		return
 	}
 	var signer crypto.Signer
 	switch device.Algorithm {
@@ -87,12 +89,13 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 	signedData, err := signer.Sign([]byte(body.Data))
 	if err != nil {
 		WriteInternalError(response)
+		return
 	}
-	signatureCounter := (*s.storage).GetDeviceSignaturesCount(body.DeviceId)
+	signatureCounter := s.storage.GetDeviceSignaturesCount(body.DeviceId)
 
 	signTransactionResponse := SignTransactionResponse{
 		Signature:  string(signedData),
-		SignedData: fmt.Sprintf("%v_%v_%v", signatureCounter, body.Data, string(lastSignature.SignedData)),
+		SignedData: fmt.Sprintf("%d_%s_%s", signatureCounter, body.Data, string(lastSignature.SignedData)),
 	}
 
 	WriteAPIResponse(response, http.StatusOK, signTransactionResponse)

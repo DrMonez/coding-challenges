@@ -20,20 +20,20 @@ func main() {
 	}
 
 	var rsaSigner = crypto.RSASigner{
-		Storage:      &storage,
+		Storage:      storage,
 		RsaMarshaler: crypto.NewRSAMarshaler(),
 		RsaGenerator: crypto.RSAGenerator{},
 	}
 
 	var eccSigner = crypto.ECCSigner{
-		Storage:      &storage,
+		Storage:      storage,
 		EccMarshaler: crypto.NewECCMarshaler(),
 		EccGenerator: crypto.ECCGenerator{},
 	}
 
 	server := api.NewServer(
 		ListenAddress,
-		&storage,
+		storage,
 		&rsaSigner,
 		&eccSigner,
 	)

@@ -1,4 +1,4 @@
-package helpers
+package assert
 
 import (
 	"fmt"

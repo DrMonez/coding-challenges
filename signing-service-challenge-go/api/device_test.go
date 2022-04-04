@@ -1,7 +1,7 @@
 package api
 
 import (
-	"github.com/DrMonez/coding-challenges/signing-service-challenge/helpers"
+	"github.com/DrMonez/coding-challenges/signing-service-challenge/assert"
 	"io"
 	"net/http"
 	"strings"
@@ -17,9 +17,9 @@ func TestPostMethodTemplateWithOptionalParameter(t *testing.T) {
 	}
 	isValid, errors := PostMethodTemplate(&request, &body)
 	var expectedErrors *[]string = nil
-	helpers.ShouldBe(t, isValid, true)
-	helpers.ShouldBe(t, errors, expectedErrors)
-	helpers.ShouldBe(t, body, CreateSignatureDeviceRequest{Id: "123456", Algorithm: "RSA", Label: "some label"})
+	assert.ShouldBe(t, isValid, true)
+	assert.ShouldBe(t, errors, expectedErrors)
+	assert.ShouldBe(t, body, CreateSignatureDeviceRequest{Id: "123456", Algorithm: "RSA", Label: "some label"})
 }
 
 func TestPostMethodTemplateWithoutOptionalParameter(t *testing.T) {
@@ -31,7 +31,7 @@ func TestPostMethodTemplateWithoutOptionalParameter(t *testing.T) {
 	}
 	isValid, errors := PostMethodTemplate(&request, &body)
 	var expectedErrors *[]string = nil
-	helpers.ShouldBe(t, isValid, true)
-	helpers.ShouldBe(t, errors, expectedErrors)
-	helpers.ShouldBe(t, body, CreateSignatureDeviceRequest{Id: "123456", Algorithm: "RSA", Label: ""})
+	assert.ShouldBe(t, isValid, true)
+	assert.ShouldBe(t, errors, expectedErrors)
+	assert.ShouldBe(t, body, CreateSignatureDeviceRequest{Id: "123456", Algorithm: "RSA", Label: ""})
 }

@@ -1,8 +1,8 @@
 package persistence
 
 import (
+	"github.com/DrMonez/coding-challenges/signing-service-challenge/assert"
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/domain"
-	"github.com/DrMonez/coding-challenges/signing-service-challenge/helpers"
 	"testing"
 )
 
@@ -14,49 +14,50 @@ var storage = LocalStorage{
 
 func TestLocalStorage_CreateSignatureDevice(t *testing.T) {
 	deviceId, label := storage.CreateSignatureDevice("test", "RSA", "")
-	helpers.ShouldNotBe(t, label, "")
-	helpers.ShouldNotBe(t, deviceId, "")
+	assert.ShouldNotBe(t, label, "")
+	assert.ShouldNotBe(t, deviceId, "")
 	userDevices := storage.UserDevices["test"]
-	helpers.ShouldNotBe(t, userDevices[deviceId], nil)
+	assert.ShouldNotBe(t, userDevices[deviceId], nil)
 	device := storage.Devices[deviceId]
-	helpers.ShouldNotBe(t, device, nil)
-	helpers.ShouldBe(t, device.Id, deviceId)
-	helpers.ShouldBe(t, device.Algorithm, domain.RSA)
-	helpers.ShouldBe(t, device.Label, label)
+	assert.ShouldNotBe(t, device, nil)
+	assert.ShouldBe(t, device.Id, deviceId)
+	assert.ShouldBe(t, device.Algorithm, domain.RSA)
+	assert.ShouldBe(t, device.Label, label)
 }
 
 func TestLocalStorage_GetDevice(t *testing.T) {
 	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
 	device := storage.GetDevice(deviceId)
-	helpers.ShouldNotBe(t, device, nil)
-	helpers.ShouldBe(t, device.Id, deviceId)
-	helpers.ShouldBe(t, device.Algorithm, domain.RSA)
-	helpers.ShouldBe(t, device.Label, "label")
+	assert.ShouldNotBe(t, device, nil)
+	assert.ShouldBe(t, device.Id, deviceId)
+	assert.ShouldBe(t, device.Algorithm, domain.RSA)
+	assert.ShouldBe(t, device.Algorithm, domain.RSA)
+	assert.ShouldBe(t, device.Label, "label")
 }
 
 func TestLocalStorage_UpdateSignatureCounter(t *testing.T) {
 	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
 	storage.UpdateSignatureCounter(deviceId)
 	actualDevice := storage.Devices[deviceId]
-	helpers.ShouldNotBe(t, actualDevice, nil)
-	helpers.ShouldBe(t, actualDevice.Id, deviceId)
-	helpers.ShouldBe(t, actualDevice.SignatureCounter, 1)
+	assert.ShouldNotBe(t, actualDevice, nil)
+	assert.ShouldBe(t, actualDevice.Id, deviceId)
+	assert.ShouldBe(t, actualDevice.SignatureCounter, 1)
 }
 
 func TestLocalStorage_GetDeviceSignaturesCount(t *testing.T) {
 	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
 	defaultCount := storage.GetDeviceSignaturesCount(deviceId)
-	helpers.ShouldBe(t, defaultCount, 0)
+	assert.ShouldBe(t, defaultCount, 0)
 	storage.UpdateSignatureCounter(deviceId)
 	actualCount := storage.GetDeviceSignaturesCount(deviceId)
-	helpers.ShouldBe(t, actualCount, 1)
+	assert.ShouldBe(t, actualCount, 1)
 }
 
 func TestLocalStorage_AddSignature(t *testing.T) {
 	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
 	storage.AddSignature(deviceId, make([]byte, 10), make([]byte, 10), make([]byte, 10))
 	signatures := storage.Signatures[deviceId]
-	helpers.ShouldBe(t, len(signatures), 1)
+	assert.ShouldBe(t, len(signatures), 1)
 }
 
 func TestLocalStorage_GetLastDeviceSignature(t *testing.T) {
@@ -64,5 +65,5 @@ func TestLocalStorage_GetLastDeviceSignature(t *testing.T) {
 	signedData := []byte("some data")
 	storage.AddSignature(deviceId, make([]byte, 10), make([]byte, 10), signedData)
 	lastSignature, _ := storage.GetLastDeviceSignature(deviceId)
-	helpers.ShouldBe(t, string(lastSignature.SignedData), string(signedData))
+	assert.ShouldBe(t, string(lastSignature.SignedData), string(signedData))
 }

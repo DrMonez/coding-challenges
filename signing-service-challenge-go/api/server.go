@@ -20,7 +20,7 @@ type ErrorResponse struct {
 // Server manages HTTP requests and dispatches them to the appropriate services.
 type Server struct {
 	listenAddress string
-	storage       *persistence.Storage
+	storage       persistence.Storage
 	rsaSigner     *crypto.RSASigner
 	eccSigner     *crypto.ECCSigner
 }
@@ -28,7 +28,7 @@ type Server struct {
 // NewServer is a factory to instantiate a new Server.
 func NewServer(
 	listenAddress string,
-	storage *persistence.Storage,
+	storage persistence.Storage,
 	rsaSigner *crypto.RSASigner,
 	eccSigner *crypto.ECCSigner,
 ) *Server {

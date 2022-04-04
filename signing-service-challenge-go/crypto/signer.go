@@ -15,7 +15,7 @@ type Signer interface {
 
 type RSASigner struct {
 	Device       *domain.Device
-	Storage      *persistence.Storage
+	Storage      persistence.Storage
 	RsaGenerator RSAGenerator
 	RsaMarshaler RSAMarshaler
 }
@@ -25,7 +25,7 @@ func (s RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	digits := GetHash(dataToBeSigned)
+	digits := GetSha256Hash(dataToBeSigned)
 
 	signedData, err := keyPair.Private.Sign(rand.Reader, digits, crypto.SHA256)
 	if err != nil {
@@ -35,7 +35,7 @@ func (s RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = (*s.Storage).AddSignature(s.Device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
+	err = s.Storage.AddSignature(s.Device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (s RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 
 type ECCSigner struct {
 	Device       *domain.Device
-	Storage      *persistence.Storage
+	Storage      persistence.Storage
 	EccGenerator ECCGenerator
 	EccMarshaler ECCMarshaler
 }
@@ -54,7 +54,7 @@ func (s ECCSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	digits := GetHash(dataToBeSigned)
+	digits := GetSha256Hash(dataToBeSigned)
 
 	signedData, err := keyPair.Private.Sign(rand.Reader, digits, crypto.SHA256)
 	if err != nil {
@@ -65,14 +65,14 @@ func (s ECCSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = (*s.Storage).AddSignature(s.Device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
+	err = s.Storage.AddSignature(s.Device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
 	if err != nil {
 		return nil, err
 	}
 	return signedData, nil
 }
 
-func GetHash(dataToBeSigned []byte) []byte {
+func GetSha256Hash(dataToBeSigned []byte) []byte {
 	hash := sha256.New()
 	hash.Write(dataToBeSigned)
 	return hash.Sum(nil)
