@@ -74,11 +74,11 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 		WriteInternalError(response)
 	}
 	var signer crypto.Signer
-	switch device.Algorithm.String() {
-	case "RSA":
+	switch device.Algorithm {
+	case domain.RSA:
 		s.rsaSigner.Device = device
 		signer = s.rsaSigner
-	case "ECC":
+	case domain.ECC:
 		s.eccSigner.Device = device
 		signer = s.eccSigner
 	default:

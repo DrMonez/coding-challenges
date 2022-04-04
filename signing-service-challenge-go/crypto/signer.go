@@ -50,7 +50,6 @@ type ECCSigner struct {
 }
 
 func (s ECCSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
-	// There's generated unsupported keyPair
 	keyPair, err := s.EccGenerator.Generate()
 	if err != nil {
 		return nil, err
@@ -61,6 +60,7 @@ func (s ECCSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	marshaledPublicKey, marshaledPrivateKey, err := s.EccMarshaler.Encode(*keyPair)
 	if err != nil {
 		return nil, err

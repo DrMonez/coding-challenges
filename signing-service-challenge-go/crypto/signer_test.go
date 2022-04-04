@@ -68,6 +68,6 @@ func TestECCSigner_Sign(t *testing.T) {
 	}
 	asn1.Unmarshal(signedData, &esig)
 
-	err := ecdsa.Verify(keyPair.Public, GetHash(dataToBeSigned), esig.R, esig.S)
-	helpers.ShouldBe(t, err, nil)
+	isValid := ecdsa.Verify(keyPair.Public, GetHash(dataToBeSigned), esig.R, esig.S)
+	helpers.ShouldBe(t, isValid, true)
 }

@@ -21,7 +21,7 @@ func TestLocalStorage_CreateSignatureDevice(t *testing.T) {
 	device := storage.Devices[deviceId]
 	helpers.ShouldNotBe(t, device, nil)
 	helpers.ShouldBe(t, device.Id, deviceId)
-	helpers.ShouldBe(t, device.Algorithm.String(), "RSA")
+	helpers.ShouldBe(t, device.Algorithm, domain.RSA)
 	helpers.ShouldBe(t, device.Label, label)
 }
 
@@ -30,7 +30,7 @@ func TestLocalStorage_GetDevice(t *testing.T) {
 	device := storage.GetDevice(deviceId)
 	helpers.ShouldNotBe(t, device, nil)
 	helpers.ShouldBe(t, device.Id, deviceId)
-	helpers.ShouldBe(t, device.Algorithm.String(), "RSA")
+	helpers.ShouldBe(t, device.Algorithm, domain.RSA)
 	helpers.ShouldBe(t, device.Label, "label")
 }
 
