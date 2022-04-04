@@ -58,3 +58,11 @@ func TestLocalStorage_AddSignature(t *testing.T) {
 	signatures := storage.Signatures[deviceId]
 	helpers.ShouldBe(t, len(signatures), 1)
 }
+
+func TestLocalStorage_GetLastDeviceSignature(t *testing.T) {
+	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
+	signedData := []byte("some data")
+	storage.AddSignature(deviceId, make([]byte, 10), make([]byte, 10), signedData)
+	lastSignature, _ := storage.GetLastDeviceSignature(deviceId)
+	helpers.ShouldBe(t, string(lastSignature.SignedData), string(signedData))
+}

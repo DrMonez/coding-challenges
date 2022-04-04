@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
+	"github.com/DrMonez/coding-challenges/signing-service-challenge/crypto"
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/domain"
 	"net/http"
 )
@@ -63,7 +65,35 @@ func (s *Server) SignTransaction(response http.ResponseWriter, request *http.Req
 		return
 	}
 
-	signTransactionResponse := SignTransactionResponse{}
+	lastSignature, err := (*s.storage).GetLastDeviceSignature(body.DeviceId)
+	if err != nil {
+		WriteInternalError(response)
+	}
+	device := (*s.storage).GetDevice(body.DeviceId)
+	if device == nil {
+		WriteInternalError(response)
+	}
+	var signer crypto.Signer
+	switch device.Algorithm.String() {
+	case "RSA":
+		s.rsaSigner.Device = device
+		signer = s.rsaSigner
+	case "ECC":
+		s.eccSigner.Device = device
+		signer = s.eccSigner
+	default:
+		WriteInternalError(response)
+	}
+	signedData, err := signer.Sign([]byte(body.Data))
+	if err != nil {
+		WriteInternalError(response)
+	}
+	signatureCounter := (*s.storage).GetDeviceSignaturesCount(body.DeviceId)
+
+	signTransactionResponse := SignTransactionResponse{
+		Signature:  string(signedData),
+		SignedData: fmt.Sprintf("%v_%v_%v", signatureCounter, body.Data, string(lastSignature.SignedData)),
+	}
 
 	WriteAPIResponse(response, http.StatusOK, signTransactionResponse)
 }

@@ -18,6 +18,7 @@ type Storage interface {
 	UpdateSignatureCounter(deviceId string) error
 	AddSignature(deviceId string, publicKey []byte, privateKey []byte, signedData []byte) error
 	GetDeviceSignaturesCount(deviceId string) int
+	GetLastDeviceSignature(deviceId string) (*domain.Signature, error)
 }
 
 type LocalStorage struct {
@@ -110,4 +111,19 @@ func (s *LocalStorage) AddSignature(deviceId string, publicKey []byte, privateKe
 		return err
 	}
 	return nil
+}
+
+func (s *LocalStorage) GetLastDeviceSignature(deviceId string) (*domain.Signature, error) {
+	s.SignaturesMutex.Lock()
+	deviceSignatures := s.Signatures[deviceId]
+	if deviceSignatures == nil {
+		return nil, fmt.Errorf("Signatures of device with Id=\"%s\" do not exist", deviceId)
+	}
+	signaturesCount := s.GetDeviceSignaturesCount(deviceId)
+	lastSignature := deviceSignatures[signaturesCount-1]
+	if lastSignature == nil {
+		return nil, fmt.Errorf("Signatures of device with Id=\"%s\" do not exist", deviceId)
+	}
+	s.SignaturesMutex.Unlock()
+	return lastSignature, nil
 }

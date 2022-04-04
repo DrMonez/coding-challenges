@@ -14,14 +14,14 @@ type Signer interface {
 }
 
 type RSASigner struct {
-	device       *domain.Device
-	storage      *persistence.Storage
-	rsaGenerator RSAGenerator
-	rsaMarshaler RSAMarshaler
+	Device       *domain.Device
+	Storage      *persistence.Storage
+	RsaGenerator RSAGenerator
+	RsaMarshaler RSAMarshaler
 }
 
 func (s RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
-	keyPair, err := s.rsaGenerator.Generate()
+	keyPair, err := s.RsaGenerator.Generate()
 	if err != nil {
 		return nil, err
 	}
@@ -31,11 +31,11 @@ func (s RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	marshaledPublicKey, marshaledPrivateKey, err := s.rsaMarshaler.Marshal(*keyPair)
+	marshaledPublicKey, marshaledPrivateKey, err := s.RsaMarshaler.Marshal(*keyPair)
 	if err != nil {
 		return nil, err
 	}
-	err = (*s.storage).AddSignature(s.device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
+	err = (*s.Storage).AddSignature(s.Device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
 	if err != nil {
 		return nil, err
 	}
@@ -43,14 +43,15 @@ func (s RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 }
 
 type ECCSigner struct {
-	device       *domain.Device
-	storage      *persistence.Storage
-	eccGenerator ECCGenerator
-	eccMarshaler ECCMarshaler
+	Device       *domain.Device
+	Storage      *persistence.Storage
+	EccGenerator ECCGenerator
+	EccMarshaler ECCMarshaler
 }
 
 func (s ECCSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
-	keyPair, err := s.eccGenerator.Generate()
+	// There's generated unsupported keyPair
+	keyPair, err := s.EccGenerator.Generate()
 	if err != nil {
 		return nil, err
 	}
@@ -60,11 +61,11 @@ func (s ECCSigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	marshaledPublicKey, marshaledPrivateKey, err := s.eccMarshaler.Encode(*keyPair)
+	marshaledPublicKey, marshaledPrivateKey, err := s.EccMarshaler.Encode(*keyPair)
 	if err != nil {
 		return nil, err
 	}
-	err = (*s.storage).AddSignature(s.device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
+	err = (*s.Storage).AddSignature(s.Device.Id, marshaledPublicKey, marshaledPrivateKey, signedData)
 	if err != nil {
 		return nil, err
 	}

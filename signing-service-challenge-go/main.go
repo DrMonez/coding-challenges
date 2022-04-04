@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/api"
+	"github.com/DrMonez/coding-challenges/signing-service-challenge/crypto"
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/domain"
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/persistence"
 	"log"
@@ -12,12 +13,30 @@ const (
 )
 
 func main() {
-	var Storage persistence.Storage = &persistence.LocalStorage{
+	var storage persistence.Storage = &persistence.LocalStorage{
 		UserDevices: make(map[string]map[string]struct{}),
 		Devices:     make(map[string]*domain.Device),
+		Signatures:  make(map[string]map[int]*domain.Signature),
 	}
 
-	server := api.NewServer(ListenAddress, &Storage)
+	var rsaSigner = crypto.RSASigner{
+		Storage:      &storage,
+		RsaMarshaler: crypto.NewRSAMarshaler(),
+		RsaGenerator: crypto.RSAGenerator{},
+	}
+
+	var eccSigner = crypto.ECCSigner{
+		Storage:      &storage,
+		EccMarshaler: crypto.NewECCMarshaler(),
+		EccGenerator: crypto.ECCGenerator{},
+	}
+
+	server := api.NewServer(
+		ListenAddress,
+		&storage,
+		&rsaSigner,
+		&eccSigner,
+	)
 
 	if err := server.Run(); err != nil {
 		log.Fatal("Could not start server on ", ListenAddress)
