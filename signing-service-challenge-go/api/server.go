@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"github.com/DrMonez/coding-challenges/signing-service-challenge/crypto"
 	"github.com/DrMonez/coding-challenges/signing-service-challenge/persistence"
 	"net/http"
 )
@@ -21,22 +20,16 @@ type ErrorResponse struct {
 type Server struct {
 	listenAddress string
 	storage       persistence.Storage
-	rsaSigner     *crypto.RSASigner
-	eccSigner     *crypto.ECCSigner
 }
 
 // NewServer is a factory to instantiate a new Server.
 func NewServer(
 	listenAddress string,
 	storage persistence.Storage,
-	rsaSigner *crypto.RSASigner,
-	eccSigner *crypto.ECCSigner,
 ) *Server {
 	return &Server{
 		listenAddress: listenAddress,
 		storage:       storage,
-		rsaSigner:     rsaSigner,
-		eccSigner:     eccSigner,
 	}
 }
 
