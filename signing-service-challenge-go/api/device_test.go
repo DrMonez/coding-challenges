@@ -16,9 +16,8 @@ func TestPostMethodTemplateWithOptionalParameter(t *testing.T) {
 		Body:   io.NopCloser(strings.NewReader(json)),
 	}
 	isValid, errors := PostMethodTemplate(&request, &body)
-	var expectedErrors *[]string = nil
 	assert.ShouldBe(t, isValid, true)
-	assert.ShouldBe(t, errors, expectedErrors)
+	assert.ShouldBe(t, len(errors), 0)
 	assert.ShouldBe(t, body, CreateSignatureDeviceRequest{Id: "123456", Algorithm: "RSA", Label: "some label"})
 }
 
@@ -30,8 +29,7 @@ func TestPostMethodTemplateWithoutOptionalParameter(t *testing.T) {
 		Body:   io.NopCloser(strings.NewReader(json)),
 	}
 	isValid, errors := PostMethodTemplate(&request, &body)
-	var expectedErrors *[]string = nil
 	assert.ShouldBe(t, isValid, true)
-	assert.ShouldBe(t, errors, expectedErrors)
+	assert.ShouldBe(t, len(errors), 0)
 	assert.ShouldBe(t, body, CreateSignatureDeviceRequest{Id: "123456", Algorithm: "RSA", Label: ""})
 }

@@ -75,18 +75,18 @@ func (s *LocalStorage) GetDevice(deviceId string) *domain.Device {
 
 func (s *LocalStorage) UpdateSignatureCounter(deviceId string) error {
 	s.DevicesMutex.Lock()
+	defer s.DevicesMutex.Unlock()
 	if s.Devices[deviceId] == nil {
 		return fmt.Errorf("Device with Id=\"%s\" does not exist", deviceId)
 	}
 	s.Devices[deviceId].SignatureCounter++
-	s.DevicesMutex.Unlock()
 	return nil
 }
 
 func (s *LocalStorage) GetDeviceSignaturesCount(deviceId string) int {
 	s.DevicesMutex.Lock()
+	defer s.DevicesMutex.Unlock()
 	deviceSignaturesCount := s.Devices[deviceId].SignatureCounter
-	s.DevicesMutex.Unlock()
 	return deviceSignaturesCount
 }
 
@@ -115,6 +115,7 @@ func (s *LocalStorage) AddSignature(deviceId string, publicKey []byte, privateKe
 
 func (s *LocalStorage) GetLastDeviceSignature(deviceId string) (*domain.Signature, error) {
 	s.SignaturesMutex.Lock()
+	defer s.SignaturesMutex.Unlock()
 	deviceSignatures := s.Signatures[deviceId]
 	if deviceSignatures == nil {
 		return nil, fmt.Errorf("Signatures of device with Id=\"%s\" do not exist", deviceId)
@@ -124,6 +125,5 @@ func (s *LocalStorage) GetLastDeviceSignature(deviceId string) (*domain.Signatur
 	if lastSignature == nil {
 		return nil, fmt.Errorf("Signatures of device with Id=\"%s\" do not exist", deviceId)
 	}
-	s.SignaturesMutex.Unlock()
 	return lastSignature, nil
 }
