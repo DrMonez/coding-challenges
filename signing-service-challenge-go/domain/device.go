@@ -1,8 +1,7 @@
 package domain
 
 type Device struct {
-	Id         string
-	Algorithm  CryptoAlgorithmType
-	Label      string
-	Signatures []Signature
+	Id        string
+	Algorithm CryptoAlgorithmType
+	Label     string
 }

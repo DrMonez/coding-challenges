@@ -9,6 +9,7 @@ import (
 var storage = LocalStorage{
 	UserDevices: make(map[string]map[string]struct{}),
 	Devices:     make(map[string]*domain.Device),
+	Signatures:  make(map[string]map[string]*domain.Signature),
 }
 
 func TestCreateSignatureDevice(t *testing.T) {
@@ -22,7 +23,6 @@ func TestCreateSignatureDevice(t *testing.T) {
 	helpers.ShouldBe(t, device.Id, deviceId)
 	helpers.ShouldBe(t, device.Algorithm.String(), "RSA")
 	helpers.ShouldBe(t, device.Label, label)
-	helpers.ShouldBe(t, len(device.Signatures), 0)
 }
 
 func TestGetDevice(t *testing.T) {
@@ -32,16 +32,14 @@ func TestGetDevice(t *testing.T) {
 	helpers.ShouldBe(t, device.Id, deviceId)
 	helpers.ShouldBe(t, device.Algorithm.String(), "RSA")
 	helpers.ShouldBe(t, device.Label, "label")
-	helpers.ShouldBe(t, len(device.Signatures), 0)
 }
 
 func TestUpdateDevice(t *testing.T) {
 	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
 	device := domain.Device{
-		Id:         deviceId,
-		Algorithm:  "ECC",
-		Label:      "new label",
-		Signatures: []domain.Signature{{DeviceId: deviceId, Id: "1", Number: 1, PrivateKey: nil}},
+		Id:        deviceId,
+		Algorithm: "ECC",
+		Label:     "new label",
 	}
 	storage.UpdateDevice(&device)
 	actualDevice := storage.Devices[deviceId]
@@ -49,5 +47,20 @@ func TestUpdateDevice(t *testing.T) {
 	helpers.ShouldBe(t, actualDevice.Id, deviceId)
 	helpers.ShouldBe(t, actualDevice.Algorithm.String(), "ECC")
 	helpers.ShouldBe(t, actualDevice.Label, "new label")
-	helpers.ShouldBe(t, len(actualDevice.Signatures), 1)
+}
+
+func TestAddSignature(t *testing.T) {
+	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
+	storage.AddSignature(deviceId, make([]byte, 10), make([]byte, 10))
+	signatures := storage.Signatures[deviceId]
+	helpers.ShouldBe(t, len(signatures), 1)
+}
+
+func TestGetDeviceSignaturesCount(t *testing.T) {
+	deviceId, _ := storage.CreateSignatureDevice("test", "RSA", "label")
+	defaultLength := storage.GetDeviceSignaturesCount(deviceId)
+	helpers.ShouldBe(t, defaultLength, 0)
+	storage.AddSignature(deviceId, make([]byte, 10), make([]byte, 10))
+	actualLength := storage.GetDeviceSignaturesCount(deviceId)
+	helpers.ShouldBe(t, actualLength, 1)
 }
