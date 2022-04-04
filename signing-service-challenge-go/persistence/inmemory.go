@@ -15,7 +15,9 @@ type Storage interface {
 	) (DeviceId string, Label string)
 
 	GetDevice(deviceId string) *domain.Device
-	UpdateDevice(device *domain.Device) error
+	UpdateSignatureCounter(deviceId string) error
+	AddSignature(deviceId string, publicKey []byte, privateKey []byte, signedData []byte) error
+	GetDeviceSignaturesCount(deviceId string) int
 }
 
 type LocalStorage struct {
@@ -24,11 +26,13 @@ type LocalStorage struct {
 	DevicesMutex     sync.Mutex
 	Devices          map[string]*domain.Device
 	SignaturesMutex  sync.Mutex
-	Signatures       map[string]map[string]*domain.Signature
+	Signatures       map[string]map[int]*domain.Signature
 }
 
 func (s *LocalStorage) CreateSignatureDevice(
-	userId string, algorithm domain.CryptoAlgorithmType, label string,
+	userId string,
+	algorithm domain.CryptoAlgorithmType,
+	label string,
 ) (DeviceId string, Label string) {
 	s.UserDevicesMutex.Lock()
 	userDevices := s.UserDevices[userId]
@@ -45,16 +49,17 @@ func (s *LocalStorage) CreateSignatureDevice(
 		actualLabel = label
 	}
 	device := domain.Device{
-		Id:        deviceId,
-		Algorithm: algorithm,
-		Label:     actualLabel,
+		Id:               deviceId,
+		Algorithm:        algorithm,
+		Label:            actualLabel,
+		SignatureCounter: 0,
 	}
 	s.DevicesMutex.Lock()
 	s.Devices[deviceId] = &device
 	s.DevicesMutex.Unlock()
 
 	s.SignaturesMutex.Lock()
-	s.Signatures[deviceId] = make(map[string]*domain.Signature)
+	s.Signatures[deviceId] = make(map[int]*domain.Signature)
 	s.SignaturesMutex.Unlock()
 
 	return deviceId, actualLabel
@@ -67,44 +72,42 @@ func (s *LocalStorage) GetDevice(deviceId string) *domain.Device {
 	return device
 }
 
-func (s *LocalStorage) UpdateDevice(device *domain.Device) error {
+func (s *LocalStorage) UpdateSignatureCounter(deviceId string) error {
 	s.DevicesMutex.Lock()
-	if s.Devices[device.Id] == nil {
-		return fmt.Errorf("Device with Id=\"%s\" does not exist", device.Id)
+	if s.Devices[deviceId] == nil {
+		return fmt.Errorf("Device with Id=\"%s\" does not exist", deviceId)
 	}
-	s.Devices[device.Id] = device
+	s.Devices[deviceId].SignatureCounter++
 	s.DevicesMutex.Unlock()
 	return nil
 }
 
-func (s *LocalStorage) AddSignature(deviceId string, publicKey []byte, privateKey []byte) error {
-	newId, err := uuid.NewUUID()
-	if err != nil {
-		return fmt.Errorf("internal error during Id creation")
-	}
+func (s *LocalStorage) GetDeviceSignaturesCount(deviceId string) int {
+	s.DevicesMutex.Lock()
+	deviceSignaturesCount := s.Devices[deviceId].SignatureCounter
+	s.DevicesMutex.Unlock()
+	return deviceSignaturesCount
+}
 
+func (s *LocalStorage) AddSignature(deviceId string, publicKey []byte, privateKey []byte, signedData []byte) error {
 	s.SignaturesMutex.Lock()
 	deviceSignatures := s.Signatures[deviceId]
 	if deviceSignatures == nil {
-		deviceSignatures = make(map[string]*domain.Signature)
+		deviceSignatures = make(map[int]*domain.Signature)
 	}
-	signatureCount := len(deviceSignatures) + 1
+	signatureCount := s.GetDeviceSignaturesCount(deviceId)
 	signature := domain.Signature{
-		Id:         newId.String(),
-		DeviceId:   deviceId,
-		Number:     signatureCount,
+		Id:         signatureCount,
+		SignedData: signedData,
 		PublicKey:  publicKey,
 		PrivateKey: privateKey,
 	}
 	deviceSignatures[signature.Id] = &signature
 	s.Signatures[deviceId] = deviceSignatures
 	s.SignaturesMutex.Unlock()
+	err := s.UpdateSignatureCounter(deviceId)
+	if err != nil {
+		return err
+	}
 	return nil
-}
-
-func (s *LocalStorage) GetDeviceSignaturesCount(deviceId string) int {
-	s.SignaturesMutex.Lock()
-	deviceSignaturesCount := len(s.Signatures[deviceId])
-	s.SignaturesMutex.Unlock()
-	return deviceSignaturesCount
 }

@@ -1,9 +1,8 @@
 package domain
 
 type Signature struct {
-	Id         string
-	DeviceId   string
-	Number     int
+	Id         int
+	SignedData []byte
 	PrivateKey []byte
 	PublicKey  []byte
 }
